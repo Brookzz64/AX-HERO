@@ -5,14 +5,11 @@
 //iniciando o LCD
 #include <LiquidCrystal_I2C.h>
 LiquidCrystal_I2C lcd(32, 16, 2);
-// Criando variáveis
-bool animacaoDesliga = false, animacaoLiga = true;
 // Criando botões
-const int botoes[] = {5,4,3,1};
+const int botoes[] = {3,4,5,6};
 volatile bool acionouInterrupcao = false;
 //Criando estado, para funcionar a lógica do on/off
 int estadoJogo = 0;
-
 
 //--------------------------------------------------------------
 //AREA DE SETUP
@@ -20,93 +17,96 @@ int estadoJogo = 0;
 
 void setup() {
   //LEDs vermelho/verde
-  pinMode(11, OUTPUT);
   pinMode(12, OUTPUT);
+  pinMode(11, OUTPUT);
   //Switch
-  pinMode(10, INPUT);
+  pinMode(A1, INPUT);
   //Buzzer
-  pinMode(13, OUTPUT);
+  pinMode(A0, OUTPUT);
   //iniciando para deixar o lcd ligado(nada escrito)
   lcd.init();          
   lcd.backlight();  
-  // iniciando botões
+  //Iniciando o serial, para debugs
+  Serial.begin(9600);
+  //iniciando botões
   for (int i = 0; i < 4; i++) {
-   pinMode(botoes[i], INPUT);
-  }
-   pinMode(2, INPUT);
-   attachInterrupt(digitalPinToInterrupt(2), acaoBotao, RISING);
-  }
+    pinMode(botoes[i], INPUT);}
+    pinMode(2, INPUT);
+    attachInterrupt(digitalPinToInterrupt(2), atenderCampainha, RISING);
+  
+}
 
 //--------------------------------------------------------------
 //MAIN CODE
 //--------------------------------------------------------------
-  
+
 void loop() {
-  //lê o interruptor constantemente, para fazer a funçao certa
-  bool onoff = digitalRead(10);
+  //lê interruptores constantemente, para fazer a função correta
+  bool onoff = digitalRead(A1);
   
-  
-  // sistema desligado
   if(onoff == LOW){
-    if(animacaoDesliga == true){
+    if(estadoJogo != 0){
       //ajustes dos LEDs
-      digitalWrite(12, HIGH);
-      digitalWrite(11, LOW);
- 	  LCDDesligando();
-      //validador, para garantir que só vai acontecer 1 vez a animaçao
-      animacaoDesliga = false;
-      animacaoLiga = true;
-    }
-    
-    
-    //sistema ligado
-    }else if(onoff == HIGH){
-      if(animacaoLiga == true){
-      //ajuste dos LEDs
-      digitalWrite(12, LOW);
       digitalWrite(11, HIGH);
+      digitalWrite(12, LOW);
+ 	  LCDDesligando(); 
+      
+      estadoJogo = 0;
+    }
+  }
+  if(onoff == HIGH && estadoJogo == 0){
+      //ajuste dos LEDs
+      digitalWrite(11, LOW);
+      digitalWrite(12, HIGH);
       LCDLigando();
-      //validação para confirmar que ligou
-      animacaoDesliga = true;
-      animacaoLiga = false;
-      } 
-    	 if(acionouInterrupcao){
-          	VerificarQualBotao();
-         	acionouInterrupcao = false;
-          }
+      estadoJogo = 2;
       }
-  		  
+  if(estadoJogo == 2){
+    
+    if (acionouInterrupcao) {
+      verificarQualBotao();
+      Serial.println("ativo");
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("iniciando o jogo");
+      delay(1000);
+      acionouInterrupcao = false;
+      estadoJogo = 3;
+    }
+  }
 }
 
 //--------------------------------------------------------------
 //FUNÇÕES INDEPENDENTES
 //--------------------------------------------------------------
 
-void VerificarQualBotao(){
+
+void atenderCampainha() {
+  acionouInterrupcao = true; 
+}
+
+
+void verificarQualBotao() {
+   delay(50); 
+
   for (int i = 0; i < 4; i++) {
     if (digitalRead(botoes[i]) == HIGH) {
+      Serial.print("Botao pressionado no pino: ");
+      Serial.println(botoes[i]);
+     
       executarAcao(i);
     }
   }
 }
 
-void executarAcao(int indice){
-  switch(indice){
-    case 0:
-    	break;
-    case 1:
-    	break;
-    case 2:
-    	break;
-    case 3:
-    	break;
+void executarAcao(int indice) {
+  switch(indice) {
+    case 0: Serial.println("Acao: Abrir Garagem"); break;
+    case 1: Serial.println("Acao: Ligar Luz"); break;
+    case 2: Serial.println("Acao: Tocar Alarme"); break;
+    case 3: Serial.println("Acao: Resetar Sistema"); break;
   }
 }
-
-void acaoBotao() {
-  acionouInterrupcao = true;
-}
-
 
 void LCDDesligando(){
   //animação de desligar
@@ -158,4 +158,5 @@ void LCDLigando(){
       lcd.setCursor(0, 1);
       lcd.print("aperte um botao.");
 }
+  
   
