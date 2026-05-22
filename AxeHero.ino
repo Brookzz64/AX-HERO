@@ -35,7 +35,7 @@ volatile bool acionouInterrupcao = false;
 // Criando estado, para funcionar a lógica do on/off
 int estadoJogo = 0;
 int X0 = 0, X1 = 0, X2 = 0, X3 = 0;
-int musc = 0, dif = 0, pts, Vida, lcdVida, iNota, record = 0;
+int musc = 0, dif = 0, pts, Vida, lcdVida, iNota, record = 0, combo;
 unsigned long intervalo, Tnota, Tbase;
 bool telaIniciada = false;
 
@@ -258,7 +258,7 @@ void loop() {
       lcd.clear();
       lcd.setCursor(0, 0); lcd.print("PONTOS: 0");
       lcd.setCursor(0, 1); lcd.print("VIDAS: 3");
-      intervalo = 100; // velocidade do pixel caindo
+      intervalo = 300; // velocidade do pixel caindo
       Tbase = 500;     // velocidade da musica
       T0 = millis();
       iNota = 0;
@@ -282,7 +282,7 @@ void loop() {
       lcd.clear();
       lcd.setCursor(0, 0); lcd.print("PONTOS: 0");
       lcd.setCursor(0, 1); lcd.print("VIDAS: 3");
-      intervalo = 80;  // LEDs mais rápidos
+      intervalo = 150;  // LEDs mais rápidos
       Tbase = 350;     // notas mais rápidas
       T0 = millis();
       iNota = 0;
@@ -306,7 +306,7 @@ void loop() {
       lcd.clear();
       lcd.setCursor(0, 0); lcd.print("PONTOS: 0");
       lcd.setCursor(0, 1); lcd.print("VIDAS: 3");
-      intervalo = 100;
+      intervalo = 300;
       Tbase = 520;
       T0 = millis();
       iNota = 0;
@@ -330,7 +330,7 @@ void loop() {
       lcd.clear();
       lcd.setCursor(0, 0); lcd.print("PONTOS: 0");
       lcd.setCursor(0, 1); lcd.print("VIDAS: 3");
-      intervalo = 80;
+      intervalo = 150;
       Tbase = 370;
       T0 = millis();
       iNota = 0;
@@ -348,7 +348,7 @@ void loop() {
 
   //DERROTA
   if(estadoJogo == 13){
-    lcd.setCursor(0, 0); lcd.print("  -VOCE PERDEU- ");
+    lcd.setCursor(0, 0); lcd.print("  -GAME OVER-   ");
     lcd.setCursor(0, 1); lcd.print("PONTOS:         ");
     lcd.setCursor(8, 1); lcd.print(pts);
     delay(3000);
@@ -466,6 +466,7 @@ void moverNotasAtivas(int id, Adafruit_NeoPixel &f, uint32_t COR){
         // Nota passou sem ser acertada
         notaAtiva[id][n] = false;
         Vida--;
+        combo = 0;
         if(pts > 0) pts -= 5;
         tone(A0, 150, 200);
         atualizarPlacar();
@@ -493,6 +494,11 @@ void verificarHit(int id, Adafruit_NeoPixel &f){
   for(int n = 0; n < MAX_NOTAS; n++){
     if(notaAtiva[id][n] && ledsF[id][n] >= (NUM_LEDS - 2)){
       pts += 10;
+      combo++;
+      if((combo % 10) == 0){
+        Vida++;
+         lcd.setCursor(8, 0); lcd.print("COMBO!!");
+      }
       tone(A0, notasFaixas[id], 50);
       f.setPixelColor(ledsF[id][n], f.Color(0,0,0));
       f.show();
